@@ -41,8 +41,8 @@ BAUD_RATE = 115200
 SERVO_STEP = 4               # Degrees per manual nudge
 PAN_LIMITS = (0, 180)
 TILT_LIMITS = (0, 180)
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
+FRAME_WIDTH = 1280
+FRAME_HEIGHT = 720
 LOCK_TIMEOUT_FRAMES = 12
 # Multi-track parameters (security-cam style)
 TRACK_MAX_DIST = 140         # Max centroid distance to associate detections
@@ -54,9 +54,19 @@ TRACK_SWITCH_PATIENCE = 6    # Frames a better track must persist before switchi
 TRACK_MISS_TOLERANCE = 15    # Drop track after this many misses
 TRACK_MIN_AGE = 2            # Frames before a track can become active
 USE_YOLO = True              # If ultralytics is installed, use YOLO for person filtering
-YOLO_MODEL_PATH = "yolov8n.pt"
+# Preference order; models auto-download if available in Ultralytics release.
+YOLO_MODEL_CANDIDATES = [
+    "yolo11n.pt",
+    "yolo11s.pt",
+   # "yolo11m.pt",
+   # "yolov8s.pt",
+]
+YOLO_DEVICE = "cpu"          # Force YOLO to run on CPU; set to "cuda:0" to use GPU explicitly
 YOLO_CONF = 0.35
 YOLO_INTERVAL = 3            # Run YOLO every N frames to save CPU
+YOLO_BOX_EXPAND_X = 1.0      # Leave boxes at default size (no expansion)
+YOLO_BOX_EXPAND_Y = 1.0      # Leave boxes at default size (no expansion)
+YOLO_AIM_Y_RATIO = 0.55      # Aim slightly below geometric center (torso center mass)
 BASE_MIN_CONTOUR_AREA = 600  # Default medium size
 COLOR_PRESETS = {
     "None": None,
@@ -85,12 +95,17 @@ class YoloDetector:
         self.frame_idx = 0
         self.cache: list[tuple[int, int, int, int, tuple[int, int]]] | None = None
         if USE_YOLO and YOLO_AVAILABLE:
-            try:
-                self.model = YoloModel(YOLO_MODEL_PATH)
-                print("YOLO loaded; using person-only detections.")
-            except Exception as exc:
-                print(f"YOLO load failed ({exc}); falling back to motion only.")
-                self.model = None
+            for candidate in YOLO_MODEL_CANDIDATES:
+                if not candidate:
+                    continue
+                try:
+                    self.model = YoloModel(candidate)
+                    print(f"YOLO loaded ({candidate}); using person-only detections.")
+                    break
+                except Exception as exc:
+                    print(f"YOLO load failed for {candidate} ({exc}); trying next option.")
+            if self.model is None:
+                print("YOLO unavailable after trying candidates; falling back to motion only.")
         elif USE_YOLO:
             print("YOLO not installed; falling back to motion only.")
 
@@ -103,22 +118,38 @@ class YoloDetector:
             return self.cache
 
         try:
-            results = self.model(frame, verbose=False)[0]
+            results = self.model(frame, verbose=False, device=YOLO_DEVICE)[0]
         except Exception as exc:
             print(f"YOLO inference error: {exc}")
             return self.cache
 
         boxes = []
+        frame_h, frame_w = frame.shape[:2]
         for xyxy, cls, conf in zip(results.boxes.xyxy, results.boxes.cls, results.boxes.conf):
             if int(cls) != 0:  # 0 == person in COCO
                 continue
             if float(conf) < YOLO_CONF:
                 continue
             x1, y1, x2, y2 = map(int, xyxy.tolist())
+            cx = (x1 + x2) // 2
+            cy = (y1 + y2) // 2
+
+            # Inflate boxes so we include full body (YOLO sometimes returns just head/upper torso in tight shots).
             w = x2 - x1
             h = y2 - y1
-            c = (x1 + w // 2, y1 + h // 2)
-            boxes.append((x1, y1, w, h, c))
+            w_exp = int(w * YOLO_BOX_EXPAND_X)
+            h_exp = int(h * YOLO_BOX_EXPAND_Y)
+            x1e = max(0, cx - w_exp // 2)
+            x2e = min(frame_w - 1, cx + w_exp // 2)
+            y1e = max(0, cy - h_exp // 2)
+            y2e = min(frame_h - 1, cy + h_exp // 2)
+            w_final = x2e - x1e
+            h_final = y2e - y1e
+
+            aim_y = y1e + int(h_final * YOLO_AIM_Y_RATIO)
+            aim_y = max(0, min(frame_h - 1, aim_y))
+            c = (cx, aim_y)
+            boxes.append((x1e, y1e, w_final, h_final, c))
 
         self.cache = boxes
         return boxes
