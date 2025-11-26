@@ -38,6 +38,9 @@ This repo exists to:
 This is a learning-focused sandbox.  
 Projects may be incomplete, messy, or replaced over time — that is intentional.
 
+## Shared UI styling
+For a consistent Tkinter look across projects, see `style-guide/` (template colors, layout pattern, and `tk_theme.py` helper).
+
 ## Contributions
 Not expected, but always welcome if constructive.
 
