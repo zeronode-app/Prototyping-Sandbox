@@ -11,6 +11,8 @@ Goal: Build a Linux-hosted motion-tracking pan/tilt sentry using an Arduino Uno,
   - **Person**: YOLO-based person-only tracking (falls back to motion if YOLO unavailable).
   - **Manual**: arrow buttons move servos; matching edge of the frame highlights green while pressed; manual laser toggle button.
 - Bounding boxes annotated (“Tracking motion” with color hint; “Tracking Person” in person mode).
+- Overlay reticle (crosshair) at tracked target in auto/person; centered reticle in manual mode.
+- In-app Help dialog describing modes, cues, colors, and controls.
 - Laser toggles when a target is locked in auto/person; manual laser toggle in manual mode.
 - Runs on a Python script communicating with Arduino over serial.
 

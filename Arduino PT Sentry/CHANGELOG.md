@@ -14,3 +14,9 @@
 11. Added `README.md` and `requirements.txt`; documented setup, usage, and dependencies.
 12. Documented distro-specific setup notes for Ubuntu/Debian and Fedora.
 13. Clarified scope vs. README roles and added non-goals to `PROJECT_SCOPE.md`.
+
+## v0.1.1 - UI/UX polish
+1. Added reusable Tkinter styling template under `style-guide/` and updated top-level README pointer.
+2. Introduced in-app Help dialog (top-right “?”) with colored cues for tracked/locked/other detections and control explanations.
+3. Streamlined control panel layout and styling; switched selectors to themed comboboxes.
+4. Added red crosshair reticle overlay: follows tracked target in auto/person, centers in manual.

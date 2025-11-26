@@ -24,7 +24,7 @@ import cv2
 import numpy as np
 import serial
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 
 try:
@@ -359,6 +359,14 @@ class SentryApp:
                         font=("Helvetica", 10, "bold"), padding=(12, 8), relief="flat", borderwidth=0)
         style.configure("ModeActive.TButton", background="#2563eb", foreground="#e2e8f0",
                         font=("Helvetica", 10, "bold"), padding=(12, 8), relief="flat", borderwidth=0)
+        style.configure("Dropdown.TCombobox",
+                        fieldbackground="#1f2937",
+                        background="#1f2937",
+                        foreground="#e2e8f0",
+                        selectbackground="#1f2937",
+                        selectforeground="#e2e8f0",
+                        borderwidth=0,
+                        arrowcolor="#e2e8f0")
         style.map("TButton",
                   background=[("active", "#1d4ed8"), ("!active", "#1e293b")],
                   foreground=[("active", "#e2e8f0"), ("!active", "#e2e8f0")])
@@ -394,8 +402,14 @@ class SentryApp:
         control_panel.grid(row=0, column=1, sticky="nsew")
         control_panel.columnconfigure(0, weight=1)
 
+        top_row = ttk.Frame(control_panel)
+        top_row.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        top_row.columnconfigure(0, weight=1)
+        help_btn = ttk.Button(top_row, text="?", width=3, command=self.show_help)
+        help_btn.grid(row=0, column=1, padx=(4, 0), sticky="e")
+
         mode_bar = ttk.Frame(control_panel)
-        mode_bar.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        mode_bar.grid(row=1, column=0, sticky="ew", pady=(0, 8))
         mode_bar.columnconfigure((0, 1, 2), weight=1)
 
         btn_auto = ttk.Button(mode_bar, text="Auto", style="Mode.TButton",
@@ -410,35 +424,40 @@ class SentryApp:
         self.mode_buttons = {"auto": btn_auto, "manual": btn_manual, "person": btn_person}
 
         action_row = ttk.Frame(control_panel)
-        action_row.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+        action_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
         action_row.columnconfigure((0, 1), weight=1)
-        ttk.Button(action_row, text="Home", command=self.home).grid(row=0, column=1, padx=4, sticky="e")
         self.laser_button = ttk.Button(action_row, text="Laser: Off", command=self.toggle_laser)
         self.laser_button.grid(row=0, column=0, padx=4, sticky="w")
+        ttk.Button(action_row, text="Home", command=self.home).grid(row=0, column=1, padx=4, sticky="e")
 
         manual = ttk.Frame(control_panel)
-        manual.grid(row=2, column=0, pady=4)
-        ttk.Button(manual, text="Up", width=11, command=lambda: self.nudge("up")).grid(row=0, column=1, pady=3)
-        ttk.Button(manual, text="Left", width=11, command=lambda: self.nudge("left")).grid(row=1, column=0, padx=3)
-        ttk.Button(manual, text="Right", width=11, command=lambda: self.nudge("right")).grid(row=1, column=2, padx=3)
-        ttk.Button(manual, text="Down", width=11, command=lambda: self.nudge("down")).grid(row=2, column=1, pady=3)
+        manual.grid(row=3, column=0, pady=4)
+        manual.columnconfigure((0, 1, 2), weight=1)
+        ttk.Button(manual, text="Up", command=lambda: self.nudge("up")).grid(row=0, column=1, pady=3, sticky="ew")
+        ttk.Button(manual, text="Left", command=lambda: self.nudge("left")).grid(row=1, column=0, padx=3, sticky="ew")
+        ttk.Button(manual, text="Right", command=lambda: self.nudge("right")).grid(row=1, column=2, padx=3, sticky="ew")
+        ttk.Button(manual, text="Down", command=lambda: self.nudge("down")).grid(row=2, column=1, pady=3, sticky="ew")
 
         color_row = ttk.Frame(control_panel)
-        color_row.grid(row=3, column=0, pady=(10, 4), sticky="ew")
+        color_row.grid(row=4, column=0, pady=(10, 4), sticky="ew")
         ttk.Label(color_row, text="Auto color target:", foreground="#cbd5e1").grid(row=0, column=0, sticky="w")
-        color_menu = ttk.OptionMenu(color_row, self.color_choice, self.color_choice.get(), *COLOR_PRESETS.keys(),
-                                    command=lambda _: self.on_color_change())
-        color_menu.grid(row=0, column=1, padx=6, sticky="e")
+        color_row.columnconfigure(1, weight=1)
+        color_menu = ttk.Combobox(color_row, textvariable=self.color_choice, values=list(COLOR_PRESETS.keys()),
+                                  state="readonly", style="Dropdown.TCombobox")
+        color_menu.grid(row=0, column=1, padx=6, sticky="ew")
+        color_menu.bind("<<ComboboxSelected>>", lambda _e: self.on_color_change())
 
         size_row = ttk.Frame(control_panel)
-        size_row.grid(row=4, column=0, pady=(4, 8), sticky="ew")
+        size_row.grid(row=5, column=0, pady=(4, 8), sticky="ew")
+        size_row.columnconfigure(1, weight=1)
         ttk.Label(size_row, text="Motion size:", foreground="#cbd5e1").grid(row=0, column=0, sticky="w")
-        size_menu = ttk.OptionMenu(size_row, self.size_choice, self.size_choice.get(), *SIZE_PRESETS.keys(),
-                                   command=lambda _: self.on_size_change())
-        size_menu.grid(row=0, column=1, padx=6, sticky="e")
+        size_menu = ttk.Combobox(size_row, textvariable=self.size_choice, values=list(SIZE_PRESETS.keys()),
+                                 state="readonly", style="Dropdown.TCombobox")
+        size_menu.grid(row=0, column=1, padx=6, sticky="ew")
+        size_menu.bind("<<ComboboxSelected>>", lambda _e: self.on_size_change())
 
         self.status_label = ttk.Label(control_panel, textvariable=self.status, style="Status.TLabel")
-        self.status_label.grid(row=5, column=0, sticky="ew", pady=(12, 0))
+        self.status_label.grid(row=6, column=0, sticky="ew", pady=(12, 0))
 
         self.root.bind("<Up>", lambda e: self.nudge("up"))
         self.root.bind("<Down>", lambda e: self.nudge("down"))
@@ -552,6 +571,60 @@ class SentryApp:
         area = SIZE_PRESETS.get(choice, BASE_MIN_CONTOUR_AREA)
         self.tracker.set_min_area(area)
 
+    def show_help(self):
+        # Custom help window to control width and show color hints cleanly.
+        if hasattr(self, "_help_win") and self._help_win and tk.Toplevel.winfo_exists(self._help_win):
+            self._help_win.lift()
+            return
+
+        win = tk.Toplevel(self.root)
+        win.title("Help")
+        win.configure(bg="#0f172a")
+        win.geometry("600x520")
+        win.transient(self.root)
+        self._help_win = win
+
+        colors = {
+            "bg": "#0f172a",
+            "text": "#e2e8f0",
+            "muted": "#cbd5e1",
+            "green": "#00c853",
+            "orange": "#f59e0b",
+            "gray": "#808080",
+            "blue": "#3b82f6",
+        }
+
+        container = tk.Frame(win, bg=colors["bg"])
+        container.pack(fill="both", expand=True, padx=14, pady=12)
+
+        def add_section(title):
+            tk.Label(container, text=title, fg=colors["text"], bg=colors["bg"],
+                     font=("Helvetica", 12, "bold"), anchor="w", justify="left").pack(fill="x", pady=(8, 4))
+
+        def add_line(text, fg=None, bullet=True):
+            prefix = "\u2022 " if bullet else ""
+            tk.Label(container, text=prefix + text, fg=fg or colors["text"], bg=colors["bg"],
+                     font=("Helvetica", 11), anchor="w", justify="left", wraplength=560).pack(fill="x", pady=1)
+
+        add_section("Modes")
+        add_line("Auto: motion tracking; optional color filter and size preset.")
+        add_line("Person: YOLO person-only (falls back to motion if YOLO missing).")
+        add_line("Manual: arrow buttons/keys move servos; laser is manual only.")
+
+        add_section("Bounding boxes")
+        add_line("Active tracked target: green box and centroid dot with label.", fg=colors["green"])
+        add_line("Acquiring/temporary target: blue/orange box while locking.", fg=colors["blue"])
+        add_line("Other detected objects: thin gray outline (not tracked focus).", fg=colors["gray"])
+
+        add_section("Manual cues")
+        add_line("Pressing arrows in manual mode highlights the corresponding frame edge green.", fg=colors["green"])
+        add_line("Laser button toggles the laser when in manual mode.", fg=colors["text"])
+
+        add_section("Controls")
+        add_line("Color dropdown limits auto detection to the selected hue (None disables).", fg=colors["muted"])
+        add_line("Motion size sets minimum blob area (small/medium/large).", fg=colors["muted"])
+        add_line("Home recenters servos.", fg=colors["muted"])
+
     def update_frame(self):
         if not self._running:
             return
@@ -574,6 +647,8 @@ class SentryApp:
         else:
             detection = Detection(None, None, False, [])
 
+        reticle_center = None
+
         if self.mode.get() in ("auto", "person"):
             label = None
             if detection.locked:
@@ -583,10 +658,13 @@ class SentryApp:
                     label = "Tracking motion"
                     if self.color_choice.get() != "None":
                         label += f" ({self.color_choice.get()})"
-            frame = self.draw_detection(frame, detection, label)
+                reticle_center = detection.centroid
+            frame = self.draw_detection(frame, detection, label, reticle_center)
             self.auto_control(detection)
         else:
             frame = self.draw_manual_highlights(frame)
+            reticle_center = (FRAME_WIDTH // 2, FRAME_HEIGHT // 2)
+            frame = self.draw_reticle(frame, reticle_center)
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(rgb)
@@ -612,7 +690,7 @@ class SentryApp:
             self.servo.set_laser(False)
             self.status.set("Auto: waiting for motion")
 
-    def draw_detection(self, frame: np.ndarray, detection: Detection, label: str | None) -> np.ndarray:
+    def draw_detection(self, frame: np.ndarray, detection: Detection, label: str | None, reticle_center) -> np.ndarray:
         # Draw secondary tracks lightly.
         for box in detection.tracks:
             x, y, w, h = box
@@ -626,6 +704,8 @@ class SentryApp:
                 cv2.circle(frame, detection.centroid, 4, (0, 255, 0), -1)
             if label:
                 cv2.putText(frame, label, (x, max(20, y - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
+        if reticle_center:
+            frame = self.draw_reticle(frame, reticle_center)
         return frame
 
     def draw_manual_highlights(self, frame: np.ndarray) -> np.ndarray:
@@ -645,6 +725,23 @@ class SentryApp:
         if "right" in active:
             cv2.rectangle(frame, (w - thickness, 0), (w, h), color, -1)
 
+        return frame
+
+    def draw_reticle(self, frame: np.ndarray, center: tuple[int, int]) -> np.ndarray:
+        cx, cy = int(center[0]), int(center[1])
+        color = (20, 40, 255)  # red-ish
+        # Outer circle
+        cv2.circle(frame, (cx, cy), 45, color, 2, lineType=cv2.LINE_AA)
+        # Inner circle
+        cv2.circle(frame, (cx, cy), 22, color, 2, lineType=cv2.LINE_AA)
+        # Crosshair lines
+        cv2.line(frame, (cx - 50, cy), (cx - 15, cy), color, 2, cv2.LINE_AA)
+        cv2.line(frame, (cx + 15, cy), (cx + 50, cy), color, 2, cv2.LINE_AA)
+        cv2.line(frame, (cx, cy - 50), (cx, cy - 15), color, 2, cv2.LINE_AA)
+        cv2.line(frame, (cx, cy + 15), (cx, cy + 50), color, 2, cv2.LINE_AA)
+        # Center plus
+        cv2.line(frame, (cx - 6, cy), (cx + 6, cy), color, 2, cv2.LINE_AA)
+        cv2.line(frame, (cx, cy - 6), (cx, cy + 6), color, 2, cv2.LINE_AA)
         return frame
 
     def on_close(self):

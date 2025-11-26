@@ -5,7 +5,8 @@ Pan/tilt sentry driven by an Arduino Uno and a Linux host. A Python GUI handles 
 ## Features
 - Modes: **Auto** (motion tracking with optional color filter and size sensitivity), **Person** (YOLO person-only), **Manual** (arrow control, manual laser toggle).
 - Bounding boxes with annotations (“Tracking motion” or “Tracking Person”), multi-target tracking with stable lock behavior.
-- Right-side professional control panel with mode bar, Home, manual arrows, color and size selectors, and laser toggle (manual only).
+- Reticle overlay at tracked target (auto/person) and centered crosshair in manual mode.
+- Right-side professional control panel with mode bar, Home, manual arrows, color and size selectors, laser toggle (manual only), and in-app Help.
 - Persists last selected mode across runs; optional YOLO if installed.
 
 ## Hardware
@@ -62,10 +63,10 @@ python python/sentry_gui.py
 - Person mode requires YOLO (`ultralytics`/`torch`) and a `yolov8n.pt` model (downloaded automatically if not present).
 
 ## Usage
-- Auto: motion tracking drives servos; choose a color filter (None/Red/Green/Blue/Yellow) and motion size (Small/Medium/Large).
+- Auto: motion tracking drives servos; choose a color filter (None/Red/Green/Blue/Yellow) and motion size (Small/Medium/Large); reticle follows the tracked target.
 - Person: YOLO person-only tracking; falls back to motion if YOLO unavailable.
-- Manual: arrow buttons or arrow keys; laser toggle button controls the laser; Home returns to center.
-- Status bar shows current state; mode selection persists across runs.
+- Manual: arrow buttons or arrow keys; laser toggle button controls the laser; Home returns to center; reticle is centered.
+- Status bar shows current state; mode selection persists across runs; “?” opens Help explaining modes, colors, and cues.
 
 ## Notes
 - Do not power servos from the Uno 5 V pin; use a regulator and common ground.
