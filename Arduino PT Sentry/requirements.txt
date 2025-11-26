@@ -1,0 +1,7 @@
+opencv-python
+pillow
+pyserial
+# Optional for person-only detection mode
+ultralytics
+torch
+torchvision

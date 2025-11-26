@@ -1,0 +1,24 @@
+.lh
+.vscode
+.idea
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.Python
+.venv/
+venv/
+env/
+Arduino PT Sentry/python/venv/
+Arduino PT Sentry/python/sentry_config.json
+Arduino PT Sentry/python/*.pt
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Build/output
+Arduino PT Sentry/python/runs/
+Arduino PT Sentry/python/*.onnx
+Arduino PT Sentry/python/*.engine
