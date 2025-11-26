@@ -20,3 +20,5 @@
 2. Introduced in-app Help dialog (top-right “?”) with colored cues for tracked/locked/other detections and control explanations.
 3. Streamlined control panel layout and styling; switched selectors to themed comboboxes.
 4. Added red crosshair reticle overlay: follows tracked target in auto/person, centers in manual.
+5. Added KiCad-friendly wiring netlist at `wiring/kicad_netlist.txt`.
+6. Added importable KiCad netlist file `wiring/kicad_net.net` (assign symbols/footprints in KiCad).

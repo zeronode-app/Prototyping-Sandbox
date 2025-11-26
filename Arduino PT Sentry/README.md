@@ -23,6 +23,8 @@ Pan/tilt sentry driven by an Arduino Uno and a Linux host. A Python GUI handles 
 - `requirements.txt` — Python dependencies (YOLO optional).
 - See `PROJECT_SCOPE.md` for detailed functional requirements, pins, serial protocol, and safety/constraints.
 - See `CHANGELOG.md` for the sequence of changes.
+- KiCad wiring netlist: `wiring/kicad_netlist.txt`.
+- Importable KiCad netlist: `wiring/kicad_net.net` (assign footprints/symbols as needed).
 
 ## Setup (Linux)
 ```bash
